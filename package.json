@@ -1,0 +1,28 @@
+{
+  "name": "vetcare360-consumers",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start:logs": "node logs/index.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ka0tick666/vetcare360-consumers.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/Ka0tick666/vetcare360-consumers/issues"
+  },
+  "homepage": "https://github.com/Ka0tick666/vetcare360-consumers#readme",
+  "private": true,
+  "dependencies": {
+    "@aws-sdk/client-lambda": "^3.1178.0",
+    "dotenv": "^18.0.10",
+    "kafkajs": "^2.2.4"
+  }
+}
