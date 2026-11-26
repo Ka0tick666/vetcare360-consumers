@@ -70,7 +70,7 @@ jobs:
           INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
           COMMIT_SHA: ${{ github.sha }}
         run: |
-          REMOTE_COMMAND="sudo -iu ec2-user bash -c 'set -e; cd /home/ec2-user/vetcare360-consumers; test -s .env; grep -q \"^SUPABASE_URL=..*\" .env; grep -q \"^SUPABASE_SERVICE_ROLE_KEY=..*\" .env; git fetch origin main; git merge --ff-only $COMMIT_SHA; test \"\$(git rev-parse HEAD)\" = $COMMIT_SHA; docker compose config --quiet; docker compose build; docker compose up -d logs validacion pagos outbox; sleep 20; docker compose ps; for container in vetcare360-consumer-logs vetcare360-consumer-validacion vetcare360-consumer-pagos vetcare360-outbox; do test \"\$(docker inspect -f {{.State.Running}} \$container)\" = true; test \"\$(docker inspect -f {{.RestartCount}} \$container)\" = 0; done'"
+          REMOTE_COMMAND="sudo -iu ec2-user bash -c 'set -e; cd /home/ec2-user/vetcare360-consumers; test -s .env; grep -q \"^SUPABASE_URL=..*\" .env; grep -q \"^SUPABASE_SERVICE_ROLE_KEY=..*\" .env; git fetch origin main; git merge --ff-only $COMMIT_SHA; test \"\$(git rev-parse HEAD)\" = $COMMIT_SHA; docker compose config --quiet; docker compose build; docker compose up -d logs validacion pagos outbox; sleep 20; docker compose ps; set -o pipefail; docker inspect -f {{.State.Running}}:{{.RestartCount}} vetcare360-consumer-logs | grep -qx true:0; docker inspect -f {{.State.Running}}:{{.RestartCount}} vetcare360-consumer-validacion | grep -qx true:0; docker inspect -f {{.State.Running}}:{{.RestartCount}} vetcare360-consumer-pagos | grep -qx true:0; docker inspect -f {{.State.Running}}:{{.RestartCount}} vetcare360-outbox | grep -qx true:0'"
 
           PARAMETERS=$(jq -n --arg cmd "$REMOTE_COMMAND" '{commands:[$cmd]}')
 
