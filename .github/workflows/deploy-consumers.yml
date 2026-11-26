@@ -33,10 +33,19 @@ jobs:
 
       - name: Validar codigo
         run: |
-          test -s shared/kafka.mjs
-          test -s logs/index.mjs
-          node --check shared/kafka.mjs
-          node --check logs/index.mjs
+          for archivo in shared/kafka.mjs shared/supabase.mjs shared/eventos.mjs logs/index.mjs validacion-pagos/index.mjs procesamiento-pagos/index.mjs outbox/index.mjs; do
+            test -s "$archivo"
+            node --check "$archivo"
+          done
+
+      - name: Ejecutar pruebas unitarias
+        run: npm test
+
+      - name: Validar Docker Compose
+        run: |
+          cp .env.example .env
+          docker compose config --quiet
+          rm .env
 
       - name: Construir imagen Docker
         run: docker build -t vetcare360-consumers:${{ github.sha }} .
@@ -56,12 +65,12 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ vars.AWS_REGION }}
 
-      - name: Desplegar consumidor
+      - name: Desplegar servicios
         env:
           INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
           COMMIT_SHA: ${{ github.sha }}
         run: |
-          REMOTE_COMMAND="sudo -iu ec2-user bash -c 'set -e; cd /home/ec2-user/vetcare360-consumers; git fetch origin main; git merge --ff-only $COMMIT_SHA; test \"\$(git rev-parse HEAD)\" = $COMMIT_SHA; docker compose config --quiet; docker compose build; docker compose up -d logs; sleep 15; docker compose ps; docker compose logs --tail=30 logs; test \"\$(docker inspect -f {{.State.Running}} vetcare360-consumer-logs)\" = true'"
+          REMOTE_COMMAND="sudo -iu ec2-user bash -c 'set -e; cd /home/ec2-user/vetcare360-consumers; test -s .env; grep -q \"^SUPABASE_URL=..*\" .env; grep -q \"^SUPABASE_SERVICE_ROLE_KEY=..*\" .env; git fetch origin main; git merge --ff-only $COMMIT_SHA; test \"\$(git rev-parse HEAD)\" = $COMMIT_SHA; docker compose config --quiet; docker compose build; docker compose up -d logs validacion pagos outbox; sleep 20; docker compose ps; for container in vetcare360-consumer-logs vetcare360-consumer-validacion vetcare360-consumer-pagos vetcare360-outbox; do test \"\$(docker inspect -f {{.State.Running}} \$container)\" = true; test \"\$(docker inspect -f {{.RestartCount}} \$container)\" = 0; done'"
 
           PARAMETERS=$(jq -n --arg cmd "$REMOTE_COMMAND" '{commands:[$cmd]}')
 

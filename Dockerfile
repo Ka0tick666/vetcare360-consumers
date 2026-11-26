@@ -10,6 +10,7 @@ COPY --chown=node:node shared/ ./shared/
 COPY --chown=node:node logs/ ./logs/
 COPY --chown=node:node validacion-pagos/ ./validacion-pagos/
 COPY --chown=node:node procesamiento-pagos/ ./procesamiento-pagos/
+COPY --chown=node:node outbox/ ./outbox/
 
 USER node
 

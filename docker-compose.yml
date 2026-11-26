@@ -1,17 +1,37 @@
+x-consumer-common: &consumer-common
+  image: vetcare360-consumers:local
+  build:
+    context: .
+  restart: unless-stopped
+  network_mode: host
+  env_file:
+    - .env
+  mem_limit: 192m
+  environment:
+    NODE_OPTIONS: "--max-old-space-size=128"
+  logging:
+    driver: json-file
+    options:
+      max-size: "5m"
+      max-file: "3"
+
 services:
   logs:
-    build: .
+    <<: *consumer-common
     container_name: vetcare360-consumer-logs
-    restart: unless-stopped
-    network_mode: host
-    env_file:
-      - .env
     command: ["node", "logs/index.mjs"]
-    mem_limit: 192m
-    environment:
-      NODE_OPTIONS: "--max-old-space-size=128"
-    logging:
-      driver: json-file
-      options:
-        max-size: "5m"
-        max-file: "3"
+
+  validacion:
+    <<: *consumer-common
+    container_name: vetcare360-consumer-validacion
+    command: ["node", "validacion-pagos/index.mjs"]
+
+  pagos:
+    <<: *consumer-common
+    container_name: vetcare360-consumer-pagos
+    command: ["node", "procesamiento-pagos/index.mjs"]
+
+  outbox:
+    <<: *consumer-common
+    container_name: vetcare360-outbox
+    command: ["node", "outbox/index.mjs"]
